@@ -1,8 +1,18 @@
 [package]
-name = "const-enum-tools"
+name = "const-enum-tools-derive"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "Trait definitions for working with enums at compile time using macros."
+authors = ["Tiger"]
+repository = "https://github.com/tigergold59/const-enum-tools-derive"
+
+[lib]
+proc-macro = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+syn = { version = "1.0.92", features = ["full", "extra-traits"] }
+quote = "1.0"
+const-enum-tools = "0.1.0"
