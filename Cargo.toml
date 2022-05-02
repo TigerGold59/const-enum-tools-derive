@@ -1,6 +1,6 @@
 [package]
 name = "const-enum-tools-derive"
-version = "0.2.2"
+version = "0.3.2"
 edition = "2021"
 license = "MIT"
 description = "Trait definitions for working with enums at compile time using macros."
@@ -15,4 +15,4 @@ proc-macro = true
 [dependencies]
 syn = { version = "1.0.92", features = ["full", "extra-traits"] }
 quote = "1.0"
-const-enum-tools = "0.1.0"
+const-enum-tools = "0.2.0"

@@ -7,17 +7,17 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
-#[proc_macro_derive(VariantIterable)]
+#[proc_macro_derive(VariantList)]
 pub fn derive_answer_fn(enum_item: TokenStream) -> TokenStream {
     let ast: syn::DeriveInput = parse_macro_input!(enum_item as DeriveInput);
 
     match ast.data {
         syn::Data::Union(union_data) => {
-            let err = syn::Error::new_spanned(union_data.union_token, "Unexpected union declaration: VariantIterable can only be derived for enums.");
+            let err = syn::Error::new_spanned(union_data.union_token, "Unexpected union declaration: VariantList can only be derived for enums.");
             err.into_compile_error().into()
         },
         syn::Data::Struct(struct_data) => {
-            let err = syn::Error::new_spanned(struct_data.struct_token, "Unexpected union declaration: VariantIterable can only be derived for enums.");
+            let err = syn::Error::new_spanned(struct_data.struct_token, "Unexpected union declaration: VariantList can only be derived for enums.");
             err.into_compile_error().into()
         },
         syn::Data::Enum(enum_field_data) => {
@@ -99,7 +99,7 @@ pub fn derive_answer_fn(enum_item: TokenStream) -> TokenStream {
             }
 
             let variant_countable_impl = quote!(
-                impl #impl_generics ::const_enum_tools::VariantCountable for #name #ty_generics #where_clause {
+                impl #impl_generics ::const_enum_tools::VariantCount for #name #ty_generics #where_clause {
                     const VARIANT_COUNT: usize = #variant_count;
                 }
             );
@@ -131,7 +131,7 @@ pub fn derive_answer_fn(enum_item: TokenStream) -> TokenStream {
                 #variant_countable_impl
 
                 #[automatically_derived]
-                impl #impl_generics ::const_enum_tools::VariantIterable for #name #ty_generics #where_clause {
+                impl #impl_generics ::const_enum_tools::VariantList for #name #ty_generics #where_clause {
                     #[inline]
                     fn variant_index (&self) -> usize {
                         #variant_index_body
