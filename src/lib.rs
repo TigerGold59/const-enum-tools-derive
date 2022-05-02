@@ -39,7 +39,7 @@ pub fn derive_answer_fn(enum_item: TokenStream) -> TokenStream {
                             all_unit_no_discriminant = false;
                             let mapped = fields.named.iter().map(|_| { quote!(_) });
                             quote!(
-                                #name::#variant_name(#(#mapped),*) => {
+                                Self::#variant_name(#(#mapped),*) => {
                                     #index
                                 }
                             )
@@ -48,7 +48,7 @@ pub fn derive_answer_fn(enum_item: TokenStream) -> TokenStream {
                             all_unit_no_discriminant = false;
                             let mapped = fields.unnamed.iter().map(|_| { quote!(_) });
                             quote!(
-                                #name::#variant_name(#(#mapped),*) => {
+                                Self::#variant_name(#(#mapped),*) => {
                                     #index
                                 }
                             )
@@ -81,7 +81,7 @@ pub fn derive_answer_fn(enum_item: TokenStream) -> TokenStream {
                                 }
                             }
                             quote!(
-                                #name::#variant_name => {
+                                Self::#variant_name => {
                                     #index
                                 }
                             )
@@ -99,7 +99,7 @@ pub fn derive_answer_fn(enum_item: TokenStream) -> TokenStream {
             }
 
             let variant_countable_impl = quote!(
-                impl #impl_generics const_enum_tools::VariantCountable for #name #ty_generics #where_clause {
+                impl #impl_generics ::const_enum_tools::VariantCountable for #name #ty_generics #where_clause {
                     const VARIANT_COUNT: usize = #variant_count;
                 }
             );
@@ -127,9 +127,11 @@ pub fn derive_answer_fn(enum_item: TokenStream) -> TokenStream {
             };
 
             quote!(
+                #[automatically_derived]
                 #variant_countable_impl
 
-                impl #impl_generics const_enum_tools::VariantIterable for #name #ty_generics #where_clause {
+                #[automatically_derived]
+                impl #impl_generics ::const_enum_tools::VariantIterable for #name #ty_generics #where_clause {
                     #[inline]
                     fn variant_index (&self) -> usize {
                         #variant_index_body
