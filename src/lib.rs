@@ -105,6 +105,10 @@ pub fn derive_answer_fn(enum_item: TokenStream) -> TokenStream {
             );
 
             // If there are no explicit discriminants
+            // This enum will be represented as a number type. Cast the reference
+            // to a raw pointer and read the bits from it (allows this optimization to be performed even when self =/= Copy).
+            // This is effectively a clone. Then cast to usize for index.
+            // I would love a better way of doing this that doesn't require an unsafe block. Alas, I can't think of any.
             let variant_index_body = if all_unit_no_discriminant {
                 quote!(
                     unsafe {
