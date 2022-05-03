@@ -36,6 +36,8 @@ pub fn derive_variant_count(enum_item: TokenStream) -> TokenStream {
     }
 }
 
+const DISALLOW_INSTANCE_BITCOPY: &str = "disallow_instance_bitcopy";
+
 #[proc_macro_derive(VariantList, attributes(disallow_instance_bitcopy))]
 pub fn derive_variant_list(enum_item: TokenStream) -> TokenStream {
     let ast: syn::DeriveInput = parse_macro_input!(enum_item as DeriveInput);
@@ -60,11 +62,17 @@ pub fn derive_variant_list(enum_item: TokenStream) -> TokenStream {
             let mut all_unit_no_discriminant = true;
             let mut disallow_instance_bitcopy = false;
 
+            for attr in &ast.attrs {
+                if attr.path.is_ident(DISALLOW_INSTANCE_BITCOPY) {
+                    disallow_instance_bitcopy = true;
+                }
+            }
+
             for (index, variant) in variants.iter().enumerate() {
                 let variant_name = &variant.ident;
                 if !disallow_instance_bitcopy {
                     for attr in &variant.attrs {
-                        if attr.path.is_ident("disallow_instance_bitcopy") {
+                        if attr.path.is_ident(DISALLOW_INSTANCE_BITCOPY) {
                             disallow_instance_bitcopy = true;
                         }
                     }

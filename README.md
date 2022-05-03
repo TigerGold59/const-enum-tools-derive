@@ -8,4 +8,4 @@ This allows you to iterate over the variants, as well as get the name of a varia
 
 In cases where the discriminant of an enum variant corresponds to its index, `.variant_index()` will include an `unsafe` block that effectively copies
 the value's underlying bytes in order to clone them. This seems to be safe for now, but if any unsafety is found to leak through it will be removed. This optimization can be disabled by placing
-`#[disallow_instance_bitcopy]` on an enum variant.
+`#[disallow_instance_bitcopy]` on an enum variant or the enum itself.
