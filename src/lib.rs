@@ -7,8 +7,37 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
-#[proc_macro_derive(VariantList)]
-pub fn derive_answer_fn(enum_item: TokenStream) -> TokenStream {
+#[proc_macro_derive(VariantCount)]
+pub fn derive_variant_count(enum_item: TokenStream) -> TokenStream {
+    let ast: syn::DeriveInput = parse_macro_input!(enum_item as DeriveInput);
+
+    match ast.data {
+        syn::Data::Union(union_data) => {
+            let err = syn::Error::new_spanned(union_data.union_token, "Unexpected union declaration: VariantList can only be derived for enums.");
+            err.into_compile_error().into()
+        },
+        syn::Data::Struct(struct_data) => {
+            let err = syn::Error::new_spanned(struct_data.struct_token, "Unexpected union declaration: VariantList can only be derived for enums.");
+            err.into_compile_error().into()
+        },
+        syn::Data::Enum(enum_field_data) => {
+            let variants = enum_field_data.variants;
+            let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
+            let name = ast.ident;
+            let variant_count = variants.len();
+
+            quote!(
+                #[automatically_derived]
+                impl #impl_generics ::const_enum_tools::VariantCount for #name #ty_generics #where_clause {
+                    const VARIANT_COUNT: usize = #variant_count;
+                }
+            ).into()
+        }
+    }
+}
+
+#[proc_macro_derive(VariantList, attributes(disallow_instance_bitcopy))]
+pub fn derive_variant_list(enum_item: TokenStream) -> TokenStream {
     let ast: syn::DeriveInput = parse_macro_input!(enum_item as DeriveInput);
 
     match ast.data {
@@ -29,9 +58,17 @@ pub fn derive_answer_fn(enum_item: TokenStream) -> TokenStream {
             let mut variant_index_match_arms = Vec::new();
             let mut variant_names = Vec::new();
             let mut all_unit_no_discriminant = true;
+            let mut disallow_instance_bitcopy = false;
 
             for (index, variant) in variants.iter().enumerate() {
                 let variant_name = &variant.ident;
+                if !disallow_instance_bitcopy {
+                    for attr in &variant.attrs {
+                        if attr.path.is_ident("disallow_instance_bitcopy") {
+                            disallow_instance_bitcopy = true;
+                        }
+                    }
+                }
 
                 variant_index_match_arms.push(
                     match &variant.fields {
@@ -98,18 +135,12 @@ pub fn derive_answer_fn(enum_item: TokenStream) -> TokenStream {
 
             }
 
-            let variant_countable_impl = quote!(
-                impl #impl_generics ::const_enum_tools::VariantCount for #name #ty_generics #where_clause {
-                    const VARIANT_COUNT: usize = #variant_count;
-                }
-            );
-
             // If there are no explicit discriminants
             // This enum will be represented as a number type. Cast the reference
             // to a raw pointer and read the bits from it (allows this optimization to be performed even when self =/= Copy).
             // This is effectively a clone. Then cast to usize for index.
             // I would love a better way of doing this that doesn't require an unsafe block. Alas, I can't think of any.
-            let variant_index_body = if all_unit_no_discriminant {
+            let variant_index_body = if all_unit_no_discriminant && !disallow_instance_bitcopy {
                 quote!(
                     unsafe {
                         (self as *const Self).read() as usize
@@ -127,9 +158,6 @@ pub fn derive_answer_fn(enum_item: TokenStream) -> TokenStream {
             };
 
             quote!(
-                #[automatically_derived]
-                #variant_countable_impl
-
                 #[automatically_derived]
                 impl #impl_generics ::const_enum_tools::VariantList for #name #ty_generics #where_clause {
                     #[inline]
